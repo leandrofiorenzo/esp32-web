@@ -9,14 +9,22 @@
             </div>
 
             <ul class="list-unstyled components">
-                <li>
+                <li :class="ventanaActual == 'Conectividad' ? 'active' : ''">
                     <a href="#" class="text-white" style="text-decoration: none;" @click="ventanaActual = 'Conectividad'">
                         <i class="fas fa-wifi"></i>
                         Conectividad
                     </a>
+                </li>
+                <li :class="ventanaActual == 'Servidor' ? 'active' : ''">
                     <a href="#" class="text-white" style="text-decoration: none;" @click="ventanaActual = 'Servidor'">
                         <i class="fas fa-server"></i>
                         Servidor CI
+                    </a>
+                </li>
+                <li :class="ventanaActual == 'Monitor' ? 'active' : ''">
+                    <a href="#" class="text-white" style="text-decoration: none;" @click="ventanaActual = 'Monitor'">
+                        <i class="fas fa-desktop"></i>
+                        Monitor
                     </a>
                 </li>
             </ul>
@@ -39,7 +47,7 @@
         
             <conectividad v-if="ventanaActual == 'Conectividad'"></conectividad>
             <servidor v-if="ventanaActual == 'Servidor'"></servidor>
-
+            <monitor v-if="ventanaActual == 'Monitor'"></monitor>
         </div>
     </div>
 </div>
@@ -49,12 +57,14 @@
 
 import Conectividad from './components/Conectividad.vue'
 import Servidor from './components/Servidor.vue'
+import Monitor from './components/Monitor.vue'
 
 export default {
     name: 'app',
     components: {
         'conectividad': Conectividad,
-        'servidor' : Servidor
+        'servidor': Servidor,
+        'monitor': Monitor
     },
     data () {
         return {
@@ -89,7 +99,7 @@ p {
 a,
 a:hover,
 a:focus {
-    color: inherit;
+    color: inherit !important;
     text-decoration: none;
     transition: all 0.3s;
 }
@@ -205,8 +215,8 @@ span {
 }
 
 #sidebar ul li a:hover {
-    color: #7386D5;
-    background: #fff;
+    color: #7386D5 !important;
+    background: #fff !important;
 }
 
 #sidebar ul li a i {

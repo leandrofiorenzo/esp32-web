@@ -8,34 +8,34 @@
     <div class="row">
       <div class="col-4">
         <h3 class="mb-3">Servidor a utilizar: </h3>
-        <button class="btn" :disabled="baseUrl == ''" @click="servidorCISeleccionado('TravisCI')" :class="servidorCI == 'TravisCI' ? 'btn-primary' : 'btn-outline-primary'">
+        <button class="btn" :disabled="baseUrl == '' || enviandoServidor" @click="servidorCISeleccionado('TravisCI')" :class="servidorCI == 'TravisCI' ? 'btn-primary' : 'btn-outline-primary'">
           Travis CI
         </button>
-        <button class="btn ml-2" :disabled="baseUrl == ''" @click="servidorCISeleccionado('CircleCI')" :class="servidorCI == 'CircleCI' ? 'btn-primary' : 'btn-outline-primary'">
+        <button class="btn ml-2" :disabled="baseUrl == '' || enviandoServidor" @click="servidorCISeleccionado('CircleCI')" :class="servidorCI == 'CircleCI' ? 'btn-primary' : 'btn-outline-primary'">
           Circle CI
         </button>
       </div>
       <div class="col-4">
         <h3 class="mb-3">Repositorio: </h3>
-        <select v-if="servidorCI == 'TravisCI'" class="form-control" :disabled="servidorCI == '' || baseUrl == ''">
+        <select v-if="servidorCI == 'CircleCI'" v-model="repositorioId" class="form-control" :disabled="servidorCI == '' || baseUrl == '' || enviandoServidor">
           <option value="">Seleccione...</option>
           <option v-for="repositorioCircleCI in repositoriosCircleCI" :key="repositorioCircleCI.nombre" :value="repositorioCircleCI.nombre">{{repositorioCircleCI.nombre}}</option>
         </select>
 
-        <select v-else class="form-control" :disabled="servidorCI == '' || baseUrl == ''">
+        <select v-else v-model="repositorioId" class="form-control" :disabled="servidorCI == '' || baseUrl == '' || enviandoServidor">
           <option value="">Seleccione...</option>
-          <option v-for="repositorioTravisCI in repositoriosTravisCI" :key="repositorioTravisCI.nombre" :value="repositorioTravisCI.nombre">{{repositorioTravisCI.nombre}}</option>
+          <option v-for="repositorioTravisCI in repositoriosTravisCI" :key="repositorioTravisCI.id" :value="repositorioTravisCI.id">{{repositorioTravisCI.nombre}}</option>
         </select>
       </div>
       <div class="col-4">
         <h3 class="mb-3">Token de acceso: </h3>
-        <input type="text" class="form-control" v-model="tokenAcceso" :disabled="servidorCI == ''">
+        <input type="text" class="form-control" v-model="tokenAcceso" :disabled="servidorCI == '' || enviandoServidor">
       </div>
     </div>
     <div class="row mt-4">
       <div class="col-4"></div>
       <div class="col-4">
-        <button @click="enviarServidorCI" class="btn btn-lg btn-primary btn-block" :disabled="!puedeGuardar">
+        <button @click="enviarServidorCI" class="btn btn-lg btn-primary btn-block" :disabled="!puedeGuardar || enviandoServidor">
           <i class="fa fa-check"></i> Grabar
         </button>
       </div>
@@ -49,9 +49,11 @@
 import axios from 'axios'
 
 export default {
-  name: 'HelloWorld',
+  name: 'Servidor',
   data () {
     return {
+      enviandoServidor: false,
+
       servidorCI: '',
       tokenAcceso: '',
       repositorioId: '',
@@ -67,10 +69,11 @@ export default {
   methods: {
     servidorCISeleccionado (servidorCI) {
       this.servidorCI = servidorCI
+      this.repositorioId = ''
       if(servidorCI == 'TravisCI') {
-        this.tokenAcceso = 'asd'
+        this.tokenAcceso = 'zxiel_jS6Xaaok3zgnHGzQ'
       } else if(servidorCI == 'CircleCI') {
-        this.tokenAcceso = 'asdsad'
+        this.tokenAcceso = '8761a13e3eb7b85dd360b5b7b85bd63c9f8841bf'
       }
     },
     cargarRepositoriosDeCircleCI() {
@@ -96,11 +99,14 @@ export default {
           "Travis-API-Version": "3"
         }
       }).then(response => {
-        this.repositoriosTravisCI = response.data.repositories.filter(e => e.active).map(e => {
-          return {
-            nombre: e.name
-          }
-        })
+        this.repositoriosTravisCI = response.data.repositories
+          .filter(e => e.active)
+          .map(e => {
+            return {
+              id: e.id,
+              nombre: e.name
+            }
+          })
       }).catch(error => {
         console.log(error)
       })
@@ -109,15 +115,22 @@ export default {
       let obj = {         
           servidorCI: this.servidorCI,
           tokenAcceso: this.tokenAcceso,
-          repositorioId: this.repositorioId
+          repositorioId: this.repositorioId.toString()
       };
+
+      this.enviandoServidor = true
+
       axios({
         method: 'POST',
-        url: `http://${this.$store.getters.getBaseUrl}/servidor`,
+        url: `http://${this.baseUrl}/servidor`,
         data: JSON.stringify(obj),
         headers: {
           'Content-Type': 'text/plain'
         }
+      }).then(response => {
+        this.enviandoServidor = false
+      }).catch(error => {
+        this.enviandoServidor = false
       })
     }
   },
@@ -136,67 +149,3 @@ export default {
   }
 };
 </script>
-
-
-<style lang="scss" scoped>
-
-$input-bg-static: #E53935;
-$input-bg-active: #43A047;
-$input-bg-disabled: #a9a4a4;
-$input-bg-pseudo-static: white;
-
-$input-width: 1.8rem;
-
-$input-radius: calc( #{$input-width} / 2 );
-$input-height: calc( #{$input-width} / 2 );
-$input-light-dims: calc( #{$input-height} / 2.5 );
-
-.item {
-  padding-left: 3px;
-  
-  h6 {
-    margin-bottom: 1px;
-    font-weight: normal;
-    font-size: 0.7rem !important;
-  }
-}
-
-input[type="checkbox"] {
-  position: relative;
-  appearance: none;
-  width: $input-width;
-  height: $input-height;
-  border-radius: $input-radius;
-  outline: none; 
-  background-color: $input-bg-static;
-  box-shadow: 0 0 0 2px $input-bg-static;
-  
-  &:before, &:after {
-    position: absolute;
-    display: block;
-    content: "";
-    border-radius: 100%;
-    background-color: $input-bg-pseudo-static;
-    transition: transform 450ms ease;
-  }
-  
-  &:before {
-    width: calc( #{$input-width} / 2 );
-    height: $input-height;
-  }
-  
-  // active state
-  &:checked {
-    background-color: $input-bg-active;
-    box-shadow: 0 0 0 2px $input-bg-active;
-    &:before {
-      transform: translateX(100%);
-    }
-  } 
-
-  &:disabled {
-    background-color: $input-bg-disabled;
-    box-shadow: 0 0 0 2px $input-bg-disabled;
-  }
-}
-</style>
