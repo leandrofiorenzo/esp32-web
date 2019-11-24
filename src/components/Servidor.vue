@@ -1,58 +1,46 @@
 <template>
-  <div class="container">
-    <div class="row">
-      <div class="col-6">
-        <h2>Ip ESP32:</h2>
-        <div class="col-12">
-          <input type="text" class="form-control" v-model="baseUrl">
-          {{baseUrl}}
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="row">
-          <h2>Credenciales WiFi</h2>
-          <div class="col-12">
-            <h5>Nombre de la red: </h5>
-            <input type="text" class="form-control" v-model="nombreDeLaRed">
-            {{nombreDeLaRed}}
-          </div>
-          <div class="col-12">
-            <h5>Contraseña de la red: </h5>
-            <input type="text" class="form-control" v-model="contrasenaDeLaRed">
-            {{contrasenaDeLaRed}}
-          </div>
-          <button class="btn btn-primary btn-lg btn-block">
-            Guardar
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="container-flluid">
+    <h1>Servidor de CI</h1>
     <hr>
+    <div class="alert alert-warning" v-if="baseUrl == ''">
+      <strong>Por favor, antes de continuar configure la ip del ESP32.</strong>
+    </div>
     <div class="row">
-      <div class="col-6">
-        <h2>Circle CI</h2>
-        <div class="item">
-          <h6>Estado</h6>   
-          <input type="checkbox"/>
-        </div>
-        <select class="form-control">
+      <div class="col-4">
+        <h3 class="mb-3">Servidor a utilizar: </h3>
+        <button class="btn" :disabled="baseUrl == ''" @click="servidorCISeleccionado('TravisCI')" :class="servidorCI == 'TravisCI' ? 'btn-primary' : 'btn-outline-primary'">
+          Travis CI
+        </button>
+        <button class="btn ml-2" :disabled="baseUrl == ''" @click="servidorCISeleccionado('CircleCI')" :class="servidorCI == 'CircleCI' ? 'btn-primary' : 'btn-outline-primary'">
+          Circle CI
+        </button>
+      </div>
+      <div class="col-4">
+        <h3 class="mb-3">Repositorio: </h3>
+        <select v-if="servidorCI == 'TravisCI'" class="form-control" :disabled="servidorCI == '' || baseUrl == ''">
           <option value="">Seleccione...</option>
           <option v-for="repositorioCircleCI in repositoriosCircleCI" :key="repositorioCircleCI.nombre" :value="repositorioCircleCI.nombre">{{repositorioCircleCI.nombre}}</option>
         </select>
-      </div>
-      <div class="col-6">
-        <h2>Travis CI</h2>
-        <div class="item">
-          <h6>Estado</h6>   
-          <input type="checkbox"/>
-        </div>
-        <select class="form-control">
+
+        <select v-else class="form-control" :disabled="servidorCI == '' || baseUrl == ''">
           <option value="">Seleccione...</option>
           <option v-for="repositorioTravisCI in repositoriosTravisCI" :key="repositorioTravisCI.nombre" :value="repositorioTravisCI.nombre">{{repositorioTravisCI.nombre}}</option>
         </select>
       </div>
+      <div class="col-4">
+        <h3 class="mb-3">Token de acceso: </h3>
+        <input type="text" class="form-control" v-model="tokenAcceso" :disabled="servidorCI == ''">
+      </div>
     </div>
-    <button @click="mockearEnvio">enviar</button>
+    <div class="row mt-4">
+      <div class="col-4"></div>
+      <div class="col-4">
+        <button @click="enviarServidorCI" class="btn btn-lg btn-primary btn-block" :disabled="!puedeGuardar">
+          <i class="fa fa-check"></i> Grabar
+        </button>
+      </div>
+      <div class="col-4"></div>
+    </div>
   </div>
 </template>
 
@@ -64,6 +52,10 @@ export default {
   name: 'HelloWorld',
   data () {
     return {
+      servidorCI: '',
+      tokenAcceso: '',
+      repositorioId: '',
+
       repositoriosCircleCI: [],
       repositoriosTravisCI: []
     }
@@ -73,6 +65,14 @@ export default {
     this.cargarRepositoriosDeTravisCI()
   },  
   methods: {
+    servidorCISeleccionado (servidorCI) {
+      this.servidorCI = servidorCI
+      if(servidorCI == 'TravisCI') {
+        this.tokenAcceso = 'asd'
+      } else if(servidorCI == 'CircleCI') {
+        this.tokenAcceso = 'asdsad'
+      }
+    },
     cargarRepositoriosDeCircleCI() {
       axios({
         method: 'GET',
@@ -105,11 +105,11 @@ export default {
         console.log(error)
       })
     },
-    mockearEnvio () {
+    enviarServidorCI () {
       let obj = {         
-          servidorCI: 'TravisCI',
-          tokenAcceso: 'zxiel_jS6Xaaok3zgnHGzQ',
-          repositorioId: '27012148'
+          servidorCI: this.servidorCI,
+          tokenAcceso: this.tokenAcceso,
+          repositorioId: this.repositorioId
       };
       axios({
         method: 'POST',
@@ -130,22 +130,9 @@ export default {
         this.$store.commit('setBaseUrl', value)
       }
     },
-    nombreDeLaRed: {
-      get () {
-        return this.$store.getters.getNombreDeLaRed
-      },
-      set(value) {
-        this.$store.commit('setNombreDeLaRed', value)
-      }
-    },
-    contrasenaDeLaRed: {
-      get () {
-        return this.$store.getters.getContrasenaDeLaRed
-      },
-      set(value) {
-        this.$store.commit('setContrasenaDeLaRed', value)
-      }
-    },
+    puedeGuardar () {
+      return this.tokenAcceso != '' && this.repositorioId != '' && this.servidorCI != ''
+    }
   }
 };
 </script>
