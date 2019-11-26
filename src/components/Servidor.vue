@@ -2,27 +2,27 @@
   <div class="container-flluid">
     <h1>Servidor de CI</h1>
     <hr>
-    <div class="alert alert-warning" v-if="baseUrl == ''">
+    <div class="alert alert-warning" v-if="ipBaliza == ''">
       <strong>Por favor, antes de continuar configure la ip del ESP32.</strong>
     </div>
     <div class="row">
       <div class="col-4">
         <h3 class="mb-3">Servidor a utilizar: </h3>
-        <button class="btn" :disabled="baseUrl == '' || enviandoServidor" @click="servidorCISeleccionado('TravisCI')" :class="servidorCI == 'TravisCI' ? 'btn-primary' : 'btn-outline-primary'">
+        <button class="btn" :disabled="ipBaliza == '' || enviandoServidor" @click="servidorCISeleccionado('TravisCI')" :class="servidorCI == 'TravisCI' ? 'btn-primary' : 'btn-outline-primary'">
           Travis CI
         </button>
-        <button class="btn ml-2" :disabled="baseUrl == '' || enviandoServidor" @click="servidorCISeleccionado('CircleCI')" :class="servidorCI == 'CircleCI' ? 'btn-primary' : 'btn-outline-primary'">
+        <button class="btn ml-2" :disabled="ipBaliza == '' || enviandoServidor" @click="servidorCISeleccionado('CircleCI')" :class="servidorCI == 'CircleCI' ? 'btn-primary' : 'btn-outline-primary'">
           Circle CI
         </button>
       </div>
       <div class="col-4">
         <h3 class="mb-3">Repositorio: </h3>
-        <select v-if="servidorCI == 'CircleCI'" v-model="repositorioId" class="form-control" :disabled="servidorCI == '' || baseUrl == '' || enviandoServidor">
+        <select v-if="servidorCI == 'CircleCI'" v-model="repositorioId" class="form-control" :disabled="servidorCI == '' || ipBaliza == '' || enviandoServidor">
           <option value="">Seleccione...</option>
           <option v-for="repositorioCircleCI in repositoriosCircleCI" :key="repositorioCircleCI.nombre" :value="repositorioCircleCI.nombre">{{repositorioCircleCI.nombre}}</option>
         </select>
 
-        <select v-else v-model="repositorioId" class="form-control" :disabled="servidorCI == '' || baseUrl == '' || enviandoServidor">
+        <select v-else v-model="repositorioId" class="form-control" :disabled="servidorCI == '' || ipBaliza == '' || enviandoServidor">
           <option value="">Seleccione...</option>
           <option v-for="repositorioTravisCI in repositoriosTravisCI" :key="repositorioTravisCI.id" :value="repositorioTravisCI.id">{{repositorioTravisCI.nombre}}</option>
         </select>
@@ -122,7 +122,7 @@ export default {
 
       axios({
         method: 'POST',
-        url: `http://${this.baseUrl}/servidor`,
+        url: `http://${this.ipBaliza}/servidor`,
         data: JSON.stringify(obj),
         headers: {
           'Content-Type': 'text/plain'
@@ -135,12 +135,12 @@ export default {
     }
   },
   computed: {
-    baseUrl: {
+    ipBaliza: {
       get () {
-        return this.$store.getters.getBaseUrl
+        return this.$store.getters.getIpBaliza
       },
       set(value) {
-        this.$store.commit('setBaseUrl', value)
+        this.$store.commit('setIpBaliza', value)
       }
     },
     puedeGuardar () {

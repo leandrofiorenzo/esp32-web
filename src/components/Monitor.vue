@@ -2,7 +2,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="col-auto">
-        <button class="btn btn-primary" @click="pingBaliza" :disabled="baseUrl == '' || haciendoPing">
+        <button class="btn btn-primary" @click="pingBaliza" :disabled="ipBaliza == '' || haciendoPing">
           <i class="fas fa-sync"></i> Ping
         </button>
       </div>
@@ -31,7 +31,7 @@ export default {
       this.pingEstado = 1
       axios({
         method: 'GET',
-        url: `http://${this.baseUrl}/ping`
+        url: `http://${this.ipBaliza}/ping`
       }).then(response => {
         this.pingEstado = 2
         this.haciendoPing = true
@@ -42,12 +42,12 @@ export default {
     }
   },
   computed: {
-    baseUrl: {
+    ipBaliza: {
       get () {
-        return this.$store.getters.getBaseUrl
+        return this.$store.getters.getipBaliza
       },
       set(value) {
-        this.$store.commit('setBaseUrl', value)
+        this.$store.commit('setipBaliza', value)
       }
     },
     obtenerColor () {

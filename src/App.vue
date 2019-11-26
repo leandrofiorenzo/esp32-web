@@ -1,11 +1,9 @@
 <template>
   <div id="app">
     <div class="wrapper">
-        <!-- Sidebar  -->
-        <nav id="sidebar" :class="isSidebarActive ? 'active' : ''">
+        <nav id="sidebar">
             <div class="sidebar-header">
-                <h3>ESP32 Baliza</h3>
-                <strong>U3</strong>
+                <h3>ESP32 Baliza</h3>               
             </div>
 
             <ul class="list-unstyled components">
@@ -28,23 +26,30 @@
                     </a>
                 </li>
             </ul>
+
+            <div class="pl-2 pr-2">
+                <h5>Ip</h5>
+                <i class="fas fa-clock"></i> {{segundosProximaActualizacionIp}}
+                <br>
+                {{ipBaliza.length > 0 ? ipBaliza : 'En espera'}} 
+            </div>
+
+            <hr>
+
+            <div class="pl-2 pr-2">
+                <h5>Estado
+                </h5>
+                <i class="fas fa-clock"></i> {{segundosProximaActualizacionEstado}}
+                <br>
+                <span :class="obtenerColorEstado">
+                    <i class="fa fa-circle"></i>
+                </span>
+                 <br>
+            </div>
         </nav>
 
         <!-- Page Content  -->
-        <div id="content">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <div class="container-fluid">
-                    <button type="button" id="sidebarCollapse" class="btn btn-info" @click="toggleSidebar">
-                        <i class="fas fa-align-left"></i>
-                        &nbsp;
-                        <span> Compimir Menu</span>
-                    </button>
-                    <button class="btn btn-dark d-inline-block d-lg-none ml-auto" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                        <i class="fas fa-align-justify"></i>
-                    </button>                  
-                </div>
-            </nav>
-        
+        <div id="content">     
             <conectividad v-if="ventanaActual == 'Conectividad'"></conectividad>
             <servidor v-if="ventanaActual == 'Servidor'"></servidor>
             <monitor v-if="ventanaActual == 'Monitor'"></monitor>
@@ -55,9 +60,14 @@
 
 <script>
 
+import axios from 'axios'
+
 import Conectividad from './components/Conectividad.vue'
 import Servidor from './components/Servidor.vue'
 import Monitor from './components/Monitor.vue'
+
+const TIEMPO_ACTUALIZACION_IP = 10 //segundos
+const TIEMPO_ACTUALIZACION_ESTADO = 10 //segundos
 
 export default {
     name: 'app',
@@ -69,12 +79,87 @@ export default {
     data () {
         return {
             ventanaActual: 'Conectividad',
-            isSidebarActive: false
+
+            estadoBaliza: 0,
+
+            segundosProximaActualizacionIp: TIEMPO_ACTUALIZACION_IP,
+            segundosProximaActualizacionEstado: TIEMPO_ACTUALIZACION_ESTADO,
+
+            buscarIpBalizaHook: null,
+            buscarEstadoBalizaHook: null
         } 
     },
+    created () {
+        this.buscarIpBaliza();
+        this.buscarEstadoBaliza();
+        this.buscarIpBalizaHook = setInterval(this.buscarIpBaliza, TIEMPO_ACTUALIZACION_IP * 1000);
+        this.buscarEstadoBalizaHook = setInterval(this.buscarEstadoBaliza, TIEMPO_ACTUALIZACION_IP * 1000);
+    },
+    destroyed () {
+        clearInterval(this.buscarIpBalizaHook)
+        clearInterval(this.buscarEstadoBalizaHook)
+    },
     methods: {
-        toggleSidebar () {
-            this.isSidebarActive = !this.isSidebarActive;
+        buscarIpBaliza() {
+            this.cuentaRegresivaIpBaliza();
+            axios({
+                method: 'GET',
+                url: 'https://esp32-api.herokuapp.com/api/v1/ip'
+            }).then(response => {
+                this.ipBaliza = response.data.ip || ''
+            }).catch(error => {
+                this.ipBaliza = ''
+            })
+        },
+        buscarEstadoBaliza() {
+            this.estadoBaliza = 0;
+            if(this.ipBaliza.length > 0) {
+                this.cuentaRegresivaEstado();
+                axios({
+                    method: 'GET',
+                    url: `http://${this.ipBaliza}/ping`,                 
+                    timeout: 5000
+                }).then(response => {
+                    this.estadoBaliza = 1
+                }).catch(error => {
+                    this.estadoBaliza = 2
+                })
+            }
+        },
+        cuentaRegresivaIpBaliza () {
+            if(this.segundosProximaActualizacionIp > 0) {
+                setTimeout(() => {
+                    this.segundosProximaActualizacionIp -= 1
+                    this.cuentaRegresivaIpBaliza()
+                }, 1000)
+            } else {
+                this.segundosProximaActualizacionIp = TIEMPO_ACTUALIZACION_IP
+            }
+        },
+        cuentaRegresivaEstado () {
+            if(this.segundosProximaActualizacionEstado > 0) {
+                setTimeout(() => {
+                    this.segundosProximaActualizacionEstado -= 1
+                    this.cuentaRegresivaEstado()
+                }, 1000)
+            } else {
+                this.segundosProximaActualizacionEstado = TIEMPO_ACTUALIZACION_IP
+            }
+        }
+    },
+    computed: {
+        ipBaliza: {
+            get () {
+                return this.$store.getters.getIpBaliza
+            },
+            set(value) {
+                this.$store.commit('setIpBaliza', value)
+            }
+        },
+        obtenerColorEstado () {
+            if(this.estadoBaliza == 0) return 'text-dark'
+            else if(this.estadoBaliza == 1) return 'bg-exitoso'
+            else return 'text-danger'
         }
     }
 }
@@ -82,6 +167,10 @@ export default {
 </script>
 
 <style>
+
+.bg-exitoso {
+    color: #0b6720
+}
 
 body {
     font-family: 'Poppins', sans-serif !important;

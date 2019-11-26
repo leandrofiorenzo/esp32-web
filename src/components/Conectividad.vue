@@ -4,10 +4,7 @@
       <div class="col-4"></div>
       <div class="col-4">
         <h1>Ip ESP32</h1>
-        <input type="text" class="form-control" v-model="baseUrl">
-        <button class="btn btn-info btn-sm" :disabled="cargandoIp" @click="refreshIp">
-          <i class="fa fa-sync"></i>
-        </button> 
+        <input type="text" class="form-control" v-model="ipBaliza">
       </div>
       <div class="col-4"></div>
     </div>   
@@ -23,7 +20,7 @@
       <div class="col-4"></div>
       <div class="col-4">
         <h5>Nombre de la red: </h5>
-        <input type="text" class="form-control" v-model="nombreRed" :disabled="baseUrl == '' || cargandoIp || enviandoCredenciales">
+        <input type="text" class="form-control" v-model="nombreRed" :disabled="ipBaliza == '' || cargandoIp || enviandoCredenciales">
       </div>
       <div class="col-4"></div>
     </div>
@@ -31,14 +28,14 @@
       <div class="col-4"></div>
       <div class="col-4">
         <h5>Contraseña de la red: </h5>
-        <input type="text" class="form-control" v-model="contrasenaRed" :disabled="baseUrl == '' || cargandoIp || enviandoCredenciales">
+        <input type="text" class="form-control" v-model="contrasenaRed" :disabled="ipBaliza == '' || cargandoIp || enviandoCredenciales">
       </div>
       <div class="col-4"></div>
     </div>
     <div class="row mt-4">
       <div class="col-4"></div>
       <div class="col-4">
-        <button class="btn btn-primary btn-lg btn-block" @click="enviarCredencialesWiFi" :disabled="baseUrl == '' || cargandoIp || enviandoCredenciales">
+        <button class="btn btn-primary btn-lg btn-block" @click="enviarCredencialesWiFi" :disabled="ipBaliza == '' || cargandoIp || enviandoCredenciales">
           <i class="fa fa-check"></i> Guardar
         </button>
       </div>
@@ -63,25 +60,11 @@ export default {
     }
   },
   methods: {
-    refreshIp () {
-      this.baseUrl = ''
-      this.cargandoIp = true
-      axios({
-        method: 'GET',
-        url: 'https://esp32-api.herokuapp.com/api/v1/ip'
-      }).then(response => {
-        if(response.data) 
-          this.baseUrl = response.data.ip || '';
-        this.cargandoIp = false
-      }).catch(error => {
-        this.cargandoIp = false
-      })
-    },
     enviarCredencialesWiFi() {
       this.enviandoCredenciales = true
       axios({
         method: 'POST',
-        url: `http://${this.baseUrl}/wifi`,
+        url: `http://${this.ipBaliza}/wifi`,
         data: {
           username: this.nombreRed,
           password: this.contrasenaRed
@@ -99,12 +82,12 @@ export default {
     }
   },
   computed: {
-    baseUrl: {
+    ipBaliza: {
       get () {
-        return this.$store.getters.getBaseUrl
+        return this.$store.getters.getIpBaliza
       },
       set(value) {
-        this.$store.commit('setBaseUrl', value)
+        this.$store.commit('setIpBaliza', value)
       }
     }
   }

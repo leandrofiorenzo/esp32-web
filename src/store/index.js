@@ -5,18 +5,18 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    baseUrl: ''
+    ipBaliza: ''
   },
   mutations: {
-    setBaseUrl(state, baseUrl) {
-      state.baseUrl = baseUrl;
+    setIpBaliza(state, ipBaliza) {
+      state.ipBaliza = ipBaliza;
     }
   },
   actions: {
   },
   getters: {
-    getBaseUrl (state) {
-      return state.baseUrl
+    getIpBaliza (state) {
+      return state.ipBaliza
     }
   }
 })
