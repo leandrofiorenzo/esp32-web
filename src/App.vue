@@ -41,7 +41,7 @@
                 </h5>
                 <i class="fas fa-clock"></i> {{segundosProximaActualizacionEstado}}
                 <br>
-                <span :class="obtenerColorEstado">
+                <span class="text-danger" :class="obtenerColorEstado">
                     <i class="fa fa-circle"></i>
                 </span>
                  <br>
@@ -80,7 +80,7 @@ export default {
         return {
             ventanaActual: 'Conectividad',
 
-            estadoBaliza: 0,
+            respondeLaBaliza: true,
 
             segundosProximaActualizacionIp: TIEMPO_ACTUALIZACION_IP,
             segundosProximaActualizacionEstado: TIEMPO_ACTUALIZACION_ESTADO,
@@ -112,7 +112,6 @@ export default {
             })
         },
         buscarEstadoBaliza() {
-            this.estadoBaliza = 0;
             if(this.ipBaliza.length > 0) {
                 this.cuentaRegresivaEstado();
                 axios({
@@ -120,9 +119,9 @@ export default {
                     url: `http://${this.ipBaliza}/ping`,                 
                     timeout: 5000
                 }).then(response => {
-                    this.estadoBaliza = 1
+                    this.respondeLaBaliza = true
                 }).catch(error => {
-                    this.estadoBaliza = 2
+                    this.respondeLaBaliza = false
                 })
             }
         },
@@ -157,9 +156,9 @@ export default {
             }
         },
         obtenerColorEstado () {
-            if(this.estadoBaliza == 0) return 'text-dark'
-            else if(this.estadoBaliza == 1) return 'bg-exitoso'
-            else return 'text-danger'
+            return this.respondeLaBaliza ? 
+                'bg-exitoso' :
+                'text-danger'
         }
     }
 }

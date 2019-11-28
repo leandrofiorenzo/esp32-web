@@ -54,10 +54,6 @@ export default {
     return {
       enviandoServidor: false,
 
-      servidorCI: '',
-      tokenAcceso: '',
-      repositorioId: '',
-
       repositoriosCircleCI: [],
       repositoriosTravisCI: []
     }
@@ -141,6 +137,30 @@ export default {
       },
       set(value) {
         this.$store.commit('setIpBaliza', value)
+      }
+    },
+    servidorCI: {
+      get() {
+        return this.$store.getters.getServidorCI
+      },
+      set(value) {
+        this.$store.commit('setServidorCI', value)
+      }
+    },
+    tokenAcceso: {
+      get() {
+        return this.$store.getters.getTokenAcceso
+      },
+      set(value) {
+        this.$store.commit('setTokenAcceso', value)
+      }
+    },
+    repositorioId: {
+      get() {
+        return this.$store.getters.getIdentificadorDelRepositorio
+      },
+      set(value) {
+        this.$store.commit('setIdentificadorDelRepositorio', value)
       }
     },
     puedeGuardar () {
