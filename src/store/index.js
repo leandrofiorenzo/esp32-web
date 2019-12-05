@@ -6,6 +6,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     ipBaliza: '',
+    respondeLaBaliza: false,
 
     servidorCI: 'CircleCI',
     tokenAcceso: '8761a13e3eb7b85dd360b5b7b85bd63c9f8841bf',
@@ -15,14 +16,13 @@ export default new Vuex.Store({
     setIpBaliza(state, ipBaliza) {
       state.ipBaliza = ipBaliza;
     },
-    setServidorCI(state, servidorCI) {
-      state.servidorCI = servidorCI;
+    setRespondeLaBaliza(state, respondeLaBaliza) {
+      state.respondeLaBaliza = respondeLaBaliza
     },
-    setTokenAcceso(state, tokenAcceso) {
-      state.tokenAcceso = tokenAcceso;
-    },
-    setIdentificadorDelRepositorio(state, identificadorDelRepositorio) {
-      state.identificadorDelRepositorio = identificadorDelRepositorio;
+    setNuevoMonitor(state, payload) {
+      state.servidorCI = payload.servidorCI;
+      state.tokenAcceso = payload.tokenAcceso;
+      state.identificadorDelRepositorio = payload.identificadorDelRepositorio;
     }
   },
   actions: {
@@ -30,6 +30,9 @@ export default new Vuex.Store({
   getters: {
     getIpBaliza(state) {
       return state.ipBaliza
+    },
+    getRespondeLaBaliza(state) {
+      return state.respondeLaBaliza
     },
     getServidorCI(state) {
       return state.servidorCI

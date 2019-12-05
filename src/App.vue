@@ -7,12 +7,6 @@
             </div>
 
             <ul class="list-unstyled components">
-                <li :class="ventanaActual == 'Conectividad' ? 'active' : ''">
-                    <a href="#" class="text-white" style="text-decoration: none;" @click="ventanaActual = 'Conectividad'">
-                        <i class="fas fa-wifi"></i>
-                        Conectividad
-                    </a>
-                </li>
                 <li :class="ventanaActual == 'Servidor' ? 'active' : ''">
                     <a href="#" class="text-white" style="text-decoration: none;" @click="ventanaActual = 'Servidor'">
                         <i class="fas fa-server"></i>
@@ -25,10 +19,21 @@
                         Monitor
                     </a>
                 </li>
+                <li :class="ventanaActual == 'Conectividad' ? 'active' : ''">
+                    <a href="#" class="text-white" style="text-decoration: none;" @click="ventanaActual = 'Conectividad'">
+                        <i class="fas fa-wifi"></i>
+                        Conectividad
+                    </a>
+                </li>
             </ul>
 
             <div class="pl-2 pr-2">
-                <h5>Ip</h5>
+                <h5>
+                    Ip 
+                    <span v-if="buscandoIpBaliza">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </h5>
                 <i class="fas fa-clock"></i> {{segundosProximaActualizacionIp}}
                 <br>
                 {{ipBaliza.length > 0 ? ipBaliza : 'En espera'}} 
@@ -37,11 +42,15 @@
             <hr>
 
             <div class="pl-2 pr-2">
-                <h5>Estado
+                <h5>
+                    Estado 
+                    <span v-if="buscandoEstadoBaliza">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
                 </h5>
                 <i class="fas fa-clock"></i> {{segundosProximaActualizacionEstado}}
                 <br>
-                <span class="text-danger" :class="obtenerColorEstado">
+                <span :class="obtenerColorEstado">
                     <i class="fa fa-circle"></i>
                 </span>
                  <br>
@@ -50,9 +59,9 @@
 
         <!-- Page Content  -->
         <div id="content">     
-            <conectividad v-if="ventanaActual == 'Conectividad'"></conectividad>
             <servidor v-if="ventanaActual == 'Servidor'"></servidor>
             <monitor v-if="ventanaActual == 'Monitor'"></monitor>
+            <conectividad v-if="ventanaActual == 'Conectividad'"></conectividad>
         </div>
     </div>
 </div>
@@ -78,53 +87,63 @@ export default {
     },
     data () {
         return {
-            ventanaActual: 'Conectividad',
+            ventanaActual: 'Servidor',
 
-            respondeLaBaliza: true,
+            buscandoIpBaliza: false,
+            buscandoEstadoBaliza: false,
 
             segundosProximaActualizacionIp: TIEMPO_ACTUALIZACION_IP,
             segundosProximaActualizacionEstado: TIEMPO_ACTUALIZACION_ESTADO,
-
-            buscarIpBalizaHook: null,
-            buscarEstadoBalizaHook: null
         } 
     },
     created () {
-        this.buscarIpBaliza();
-        this.buscarEstadoBaliza();
-        this.buscarIpBalizaHook = setInterval(this.buscarIpBaliza, TIEMPO_ACTUALIZACION_IP * 1000);
-        this.buscarEstadoBalizaHook = setInterval(this.buscarEstadoBaliza, TIEMPO_ACTUALIZACION_IP * 1000);
-    },
-    destroyed () {
-        clearInterval(this.buscarIpBalizaHook)
-        clearInterval(this.buscarEstadoBalizaHook)
+        this.buscarIpBaliza();  
+        this.buscarEstadoBaliza();     
     },
     methods: {
         buscarIpBaliza() {
-            this.cuentaRegresivaIpBaliza();
+            this.buscandoIpBaliza = true
             axios({
                 method: 'GET',
                 url: 'https://esp32-api.herokuapp.com/api/v1/ip'
             }).then(response => {
+                this.buscandoIpBaliza = false;
                 this.ipBaliza = response.data.ip || ''
+                setTimeout(this.buscarIpBaliza, TIEMPO_ACTUALIZACION_IP * 1000);
+                this.cuentaRegresivaIpBaliza();
             }).catch(error => {
-                this.ipBaliza = ''
+                this.buscandoIpBaliza = false;
+                this.ipBaliza = ''            
+                setTimeout(this.buscarIpBaliza, TIEMPO_ACTUALIZACION_IP * 1000);
+                this.cuentaRegresivaIpBaliza();
             })
         },
+
         buscarEstadoBaliza() {
             if(this.ipBaliza.length > 0) {
-                this.cuentaRegresivaEstado();
+                this.buscandoEstadoBaliza = true;
                 axios({
                     method: 'GET',
                     url: `http://${this.ipBaliza}/ping`,                 
                     timeout: 5000
                 }).then(response => {
-                    this.respondeLaBaliza = true
+                    this.buscandoEstadoBaliza = false;
+                    this.respondeLaBaliza = true;                  
+                    setTimeout(this.buscarEstadoBaliza, TIEMPO_ACTUALIZACION_ESTADO * 1000);
+                    this.cuentaRegresivaEstado();
                 }).catch(error => {
-                    this.respondeLaBaliza = false
+                    this.buscandoEstadoBaliza = false;
+                    this.respondeLaBaliza = false;
+                    setTimeout(this.buscarEstadoBaliza, TIEMPO_ACTUALIZACION_ESTADO * 1000);
+                    this.cuentaRegresivaEstado();
                 })
+            } else {               
+                this.respondeLaBaliza = false;
+                setTimeout(this.buscarEstadoBaliza, TIEMPO_ACTUALIZACION_ESTADO * 1000);
+                this.cuentaRegresivaEstado();
             }
         },
+
         cuentaRegresivaIpBaliza () {
             if(this.segundosProximaActualizacionIp > 0) {
                 setTimeout(() => {
@@ -135,6 +154,7 @@ export default {
                 this.segundosProximaActualizacionIp = TIEMPO_ACTUALIZACION_IP
             }
         },
+
         cuentaRegresivaEstado () {
             if(this.segundosProximaActualizacionEstado > 0) {
                 setTimeout(() => {
@@ -145,6 +165,7 @@ export default {
                 this.segundosProximaActualizacionEstado = TIEMPO_ACTUALIZACION_IP
             }
         }
+
     },
     computed: {
         ipBaliza: {
@@ -153,6 +174,14 @@ export default {
             },
             set(value) {
                 this.$store.commit('setIpBaliza', value)
+            }
+        },
+        respondeLaBaliza: {
+            get () {
+                return this.$store.getters.getRespondeLaBaliza
+            },
+            set(value) {
+                this.$store.commit('setRespondeLaBaliza', value)
             }
         },
         obtenerColorEstado () {
